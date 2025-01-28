@@ -80,7 +80,7 @@ export type EventData =
 export interface WriteDBParams {
   dbName: string;
   storeName: string;
-  data: any;
+  event: { type: keyof typeof EventType; data: EventData };
 }
 
 export interface ReadDBParams {

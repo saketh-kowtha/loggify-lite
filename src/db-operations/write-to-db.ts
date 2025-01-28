@@ -4,13 +4,13 @@ import { WriteDBParams } from '../types';
 const writeToDB = async ({
   dbName,
   storeName,
-  data,
+  event,
 }: WriteDBParams): Promise<void> => {
   try {
     const db = await openDB(dbName);
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
-    await store.add(data);
+    await store.add(event);
     await tx.done;
   } catch (error) {
     if (error instanceof Error) {
