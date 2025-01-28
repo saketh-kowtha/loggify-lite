@@ -1,29 +1,10 @@
-interface XMLHttpRequestMetadata {
-  request: {
-    url: string;
-    method: string;
-    headers: Record<string, string>;
-    body?: any;
-    queryParams: Record<string, string>;
-  };
-  response: {
-    status: number;
-    statusText: string;
-    headers: Record<string, string>;
-    body?: any;
-  };
-  timing: {
-    startTime: number;
-    endTime: number;
-    duration: number;
-  };
-}
+import { FetchMetadata } from '../../types';
 
 const originalXHR = window.XMLHttpRequest;
 
 export const overrideXHR = () => {
   window.XMLHttpRequest = class extends originalXHR {
-    private metadata: XMLHttpRequestMetadata;
+    private metadata: FetchMetadata;
     private startTime: number = 0;
 
     constructor() {

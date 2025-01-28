@@ -1,7 +1,4 @@
-interface WarnMetadata {
-  timestamp: number;
-  args: any[];
-}
+import { WarnMetadata } from '../../types';
 
 const originalConsoleWarn = console.warn;
 

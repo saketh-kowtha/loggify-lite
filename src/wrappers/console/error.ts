@@ -1,9 +1,4 @@
-interface ConsoleErrorMetadata {
-  message: any[];
-  timestamp: number;
-  stack?: string;
-  errors?: Error[];
-}
+import { ConsoleErrorMetadata } from '../../types';
 
 const originalConsoleError = console.error;
 

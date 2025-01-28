@@ -1,13 +1,4 @@
-interface ErrorEventMetadata {
-  message: string;
-  timestamp: number;
-  type: string;
-  stack?: string;
-  filename?: string;
-  lineNumber?: number;
-  columnNumber?: number;
-  error?: Error;
-}
+import { ErrorEventMetadata } from '../types';
 
 let errorCallback: ((metadata: ErrorEventMetadata) => void) | null = null;
 

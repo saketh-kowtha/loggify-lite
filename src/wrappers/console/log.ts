@@ -1,7 +1,4 @@
-interface LogMetadata {
-  timestamp: number;
-  args: any[];
-}
+import { LogMetadata } from '../../types';
 
 const originalConsoleLog = console.log;
 
