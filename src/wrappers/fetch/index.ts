@@ -1,4 +1,5 @@
-import { FetchMetadata } from '../../types';
+import handleEvent from '../../handle-event';
+import { EventType, FetchMetadata } from '../../types';
 
 const originalFetch = window.fetch;
 
@@ -7,88 +8,142 @@ export const overrideFetch = () => {
     input: RequestInfo | URL,
     init?: RequestInit,
   ): Promise<Response> => {
-    const startTime = performance.now();
-    const metadata: FetchMetadata = {
-      request: {
-        url: typeof input === 'string' ? input : input.toString(),
-        method: init?.method || 'GET',
-        headers: {},
-        queryParams: {},
-      },
-      response: {
-        status: 0,
-        statusText: '',
-        headers: {},
-      },
-      timing: {
-        startTime,
-        endTime: 0,
-        duration: 0,
-      },
-    };
-
-    // Parse query parameters from URL
     try {
-      const url = new URL(metadata.request.url);
-      url.searchParams.forEach((value, key) => {
-        metadata.request.queryParams[key] = value;
-      });
-    } catch (e) {
-      console.error('Invalid URL:', e);
-    }
+      const startTime = performance.now();
+      const metadata: FetchMetadata = {
+        request: {
+          url: '',
+          method: 'GET',
+          headers: {},
+          queryParams: {},
+        },
+        response: {
+          status: 0,
+          statusText: '',
+          headers: {},
+        },
+        timing: {
+          startTime,
+          endTime: 0,
+          duration: 0,
+        },
+      };
 
-    // Collect request headers
-    if (init?.headers) {
-      const headerEntries: [string, string][] = [];
-      const headers = new Headers(init.headers);
-      headers.forEach((value, key) => {
-        headerEntries.push([key, value]);
-      });
-      metadata.request.headers = Object.fromEntries(headerEntries);
-    }
-
-    // Collect request body
-    if (init?.body) {
+      // Safely set request URL
       try {
-        metadata.request.body =
-          typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
+        metadata.request.url =
+          typeof input === 'string' ? input : input.toString();
       } catch (e) {
-        metadata.request.body = init.body;
+        // console.warn('Failed to parse request URL:', e);
       }
+
+      // Safely set request method
+      try {
+        metadata.request.method = init?.method || 'GET';
+      } catch (e) {
+        // console.warn('Failed to parse request method:', e);
+      }
+
+      // Parse query parameters from URL
+      try {
+        const url = new URL(metadata.request.url);
+        url.searchParams.forEach((value, key) => {
+          metadata.request.queryParams[key] = value;
+        });
+      } catch (e) {
+        // console.warn('Failed to parse URL parameters:', e);
+      }
+
+      // Collect request headers
+      try {
+        if (init?.headers) {
+          const headerEntries: [string, string][] = [];
+          const headers = new Headers(init.headers);
+          headers.forEach((value, key) => {
+            headerEntries.push([key, value]);
+          });
+          metadata.request.headers = Object.fromEntries(headerEntries);
+        }
+      } catch (e) {
+        // console.warn('Failed to collect request headers:', e);
+      }
+
+      // Collect request body
+      try {
+        if (init?.body) {
+          metadata.request.body =
+            typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
+        }
+      } catch (e) {
+        // console.warn('Failed to parse request body:', e);
+        metadata.request.body = init?.body;
+      }
+
+      let response: Response;
+      try {
+        response = await originalFetch(input, init);
+      } catch (e) {
+        // console.error('Original fetch failed:', e);
+        throw e; // Re-throw to maintain original error behavior
+      }
+
+      const endTime = performance.now();
+
+      // Collect response metadata
+      try {
+        metadata.response.status = response.status;
+        metadata.response.statusText = response.statusText;
+
+        const responseHeaderEntries: [string, string][] = [];
+        response.headers.forEach((value, key) => {
+          responseHeaderEntries.push([key, value]);
+        });
+        metadata.response.headers = Object.fromEntries(responseHeaderEntries);
+      } catch (e) {
+        // console.warn('Failed to collect response metadata:', e);
+      }
+
+      // Try to parse response body
+      try {
+        const clonedResponse = response.clone();
+        metadata.response.body = await clonedResponse.json();
+      } catch (e) {
+        try {
+          const clonedResponse = response.clone();
+          metadata.response.body = await clonedResponse.text();
+        } catch (textError) {
+          //   console.warn('Failed to parse response body:', textError);
+        }
+      }
+
+      // Calculate timing
+      try {
+        metadata.timing.endTime = endTime;
+        metadata.timing.duration = endTime - startTime;
+      } catch (e) {
+        // console.warn('Failed to calculate timing:', e);
+      }
+
+      // Send event
+      try {
+        handleEvent({ type: EventType.FETCH, data: metadata });
+      } catch (e) {
+        // console.warn('Failed to handle event:', e);
+      }
+
+      return response;
+    } catch (error) {
+      //   console.error('Fatal error in fetch wrapper:', error);
+      // Fallback to original fetch in case of any unexpected errors
+      return originalFetch(input, init);
     }
-
-    const response = await originalFetch(input, init);
-    const endTime = performance.now();
-
-    // Collect response metadata
-    metadata.response.status = response.status;
-    metadata.response.statusText = response.statusText;
-
-    const responseHeaderEntries: [string, string][] = [];
-    response.headers.forEach((value, key) => {
-      responseHeaderEntries.push([key, value]);
-    });
-    metadata.response.headers = Object.fromEntries(responseHeaderEntries);
-
-    // Try to parse response body
-    try {
-      const clonedResponse = response.clone();
-      metadata.response.body = await clonedResponse.json();
-    } catch (e) {
-      // Response body might not be JSON
-      const clonedResponse = response.clone();
-      metadata.response.body = await clonedResponse.text();
-    }
-
-    // Calculate timing
-    metadata.timing.endTime = endTime;
-    metadata.timing.duration = endTime - startTime;
-
-    console.log('Fetch Metadata:', metadata);
-    return response;
   };
 };
 
 export const restoreFetch = () => {
-  window.fetch = originalFetch;
+  try {
+    window.fetch = originalFetch;
+  } catch (e) {
+    // console.error('Failed to restore original fetch:', e);
+  }
 };

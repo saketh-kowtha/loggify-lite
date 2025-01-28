@@ -1,20 +1,41 @@
-import { WarnMetadata } from '../../types';
+import handleEvent from '../../handle-event';
+import { EventType, WarnMetadata } from '../../types';
 
 const originalConsoleWarn = console.warn;
 
 export const overrideConsoleWarn = () => {
-  console.warn = (...args: any[]) => {
-    const metadata: WarnMetadata = {
-      timestamp: Date.now(),
-      args: args,
-    };
+  try {
+    console.warn = (...args: any[]) => {
+      try {
+        // Always call original first to ensure warning is shown
+        originalConsoleWarn.apply(console, args);
 
-    // Call original console.warn with both the original arguments and metadata
-    originalConsoleWarn(...args);
-    originalConsoleWarn('Warning Metadata:', metadata);
-  };
+        const metadata: WarnMetadata = {
+          timestamp: Date.now(),
+          args: args,
+        };
+
+        // Handle event separately so it doesn't affect original warning
+        try {
+          handleEvent({ type: EventType.CONSOLE_WARN, data: metadata });
+        } catch (e) {
+          // Silently handle event errors to not affect application
+        }
+      } catch (e) {
+        // If anything fails, ensure original warning still works
+        originalConsoleWarn.apply(console, args);
+      }
+    };
+  } catch (e) {
+    // If override fails, ensure original console.warn remains unchanged
+    console.warn = originalConsoleWarn;
+  }
 };
 
 export const restoreConsoleWarn = () => {
-  console.warn = originalConsoleWarn;
+  try {
+    console.warn = originalConsoleWarn;
+  } catch (e) {
+    // Silently handle restore errors
+  }
 };
