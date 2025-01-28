@@ -1,5 +1,6 @@
 import { EventData, EventType } from './types';
 import writeToDB from './db-operations/write-to-db';
+import runLowPriority from './run-low-priority';
 
 function storeToDB(eventType: keyof typeof EventType, eventData: EventData) {
   writeToDB({
@@ -42,7 +43,7 @@ const getEventFingerprint = (eventData: EventData): string => {
   }
 };
 
-const handleEvent = (eventData: EventData) => {
+const handleEvent = (eventData: EventData): void => {
   try {
     if (!eventData || typeof eventData !== 'object') {
       // console.error('Invalid event data received:', eventData);
@@ -112,4 +113,4 @@ const handleEvent = (eventData: EventData) => {
   }
 };
 
-export default handleEvent;
+export default runLowPriority<EventData, void>(handleEvent);
