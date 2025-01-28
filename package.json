@@ -18,5 +18,8 @@
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write ."
+  },
+  "dependencies": {
+    "idb": "^8.0.1"
   }
 }
