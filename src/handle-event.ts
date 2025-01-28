@@ -22,7 +22,7 @@ const SAMPLING_RATES = {
   [EventType.CONSOLE_ERROR]: 0.5, // Capture 50% of console errors
   [EventType.CONSOLE_LOG]: 0.1, // Capture 10% of logs
   [EventType.CONSOLE_WARN]: 0.3, // Capture 30% of warnings
-  [EventType.FETCH]: 0.2, // Capture 20% of fetch calls
+  [EventType.FETCH]: 0.5, // Capture 50% of fetch calls
 };
 
 // Generate fingerprint for deduplication
