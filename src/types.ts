@@ -76,3 +76,14 @@ export type EventData =
       type: EventType.FETCH;
       data: FetchMetadata;
     };
+
+export interface WriteDBParams {
+  dbName: string;
+  storeName: string;
+  data: any;
+}
+
+export interface ReadDBParams {
+  dbName: string;
+  storeName: string;
+}
