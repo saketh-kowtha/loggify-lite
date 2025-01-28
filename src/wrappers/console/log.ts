@@ -1,4 +1,4 @@
-import handleEvent from '../../handle-event';
+import handleEvent from '../../utils/handle-event';
 import { EventType, LogMetadata } from '../../types';
 
 const originalConsoleLog = console.log;

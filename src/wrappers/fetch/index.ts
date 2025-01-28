@@ -1,4 +1,4 @@
-import handleEvent from '../../handle-event';
+import handleEvent from '../../utils/handle-event';
 import { EventType, FetchMetadata } from '../../types';
 
 const originalFetch = window.fetch;

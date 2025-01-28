@@ -1,5 +1,5 @@
 import { EventType, FetchMetadata } from '../../types';
-import handleEvent from '../../handle-event';
+import handleEvent from '../../utils/handle-event';
 
 const originalXHR = window.XMLHttpRequest;
 

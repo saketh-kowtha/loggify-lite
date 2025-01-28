@@ -1,30 +1,35 @@
-import { EventData, EventType } from './types';
+import { EventData, EventType } from '../types';
 import writeToDB from './db-operations/write-to-db';
 import runLowPriority from './run-low-priority';
+import configStore from '../store';
 
 function storeToDB(eventType: keyof typeof EventType, eventData: EventData) {
   writeToDB({
-    dbName: 'loggify',
-    storeName: 'logs',
+    dbName: configStore.getConfig().dbName,
+    storeName: configStore.getConfig().storeName,
     event: { type: eventType, data: eventData },
   });
 }
 
 // Rate limiting configuration
-const RATE_LIMIT = {
-  maxEvents: 100, // Maximum events per window
-  windowMs: 60000, // 1 minute window
-  events: new Map<string, number[]>(), // Track event timestamps
-};
+// Track event timestamps
+const events = new Map<string, number[]>();
+
+const getRateLimit = () => ({
+  maxEvents: configStore.getConfig().maxEvents,
+  windowMs: configStore.getConfig().windowMs,
+  events, // Reference the external events Map
+});
 
 // Sampling rates for different event types
-const SAMPLING_RATES = {
-  [EventType.ERROR]: 1, // Capture all errors
-  [EventType.CONSOLE_ERROR]: 0.5, // Capture 50% of console errors
-  [EventType.CONSOLE_LOG]: 0.1, // Capture 10% of logs
-  [EventType.CONSOLE_WARN]: 0.3, // Capture 30% of warnings
-  [EventType.FETCH]: 0.5, // Capture 50% of fetch calls
-};
+const getSamplingRates = () => ({
+  [EventType.ERROR]: configStore.getConfig().samplingRates.ERROR,
+  [EventType.CONSOLE_ERROR]:
+    configStore.getConfig().samplingRates.CONSOLE_ERROR,
+  [EventType.CONSOLE_LOG]: configStore.getConfig().samplingRates.CONSOLE_LOG,
+  [EventType.CONSOLE_WARN]: configStore.getConfig().samplingRates.CONSOLE_WARN,
+  [EventType.FETCH]: configStore.getConfig().samplingRates.FETCH,
+});
 
 // Generate fingerprint for deduplication
 const getEventFingerprint = (eventData: EventData): string => {
@@ -56,7 +61,7 @@ const handleEvent = (eventData: EventData): void => {
     }
 
     // Apply sampling
-    const samplingRate = SAMPLING_RATES[eventData.type] || 1;
+    const samplingRate = getSamplingRates()[eventData.type] || 1;
     if (Math.random() > samplingRate) {
       return;
     }
@@ -64,19 +69,19 @@ const handleEvent = (eventData: EventData): void => {
     // Rate limiting
     const now = Date.now();
     const fingerprint = getEventFingerprint(eventData);
-    const eventTimes = RATE_LIMIT.events.get(fingerprint) || [];
+    const eventTimes = getRateLimit().events.get(fingerprint) || [];
 
     // Remove timestamps outside current window
-    const windowStart = now - RATE_LIMIT.windowMs;
+    const windowStart = now - getRateLimit().windowMs;
     const recentEvents = eventTimes.filter((time) => time > windowStart);
 
-    if (recentEvents.length >= RATE_LIMIT.maxEvents) {
+    if (recentEvents.length >= getRateLimit().maxEvents) {
       // console.warn(`Rate limit exceeded for event type: ${eventData.type}`);
       return;
     }
 
     // Update rate limiting tracker
-    RATE_LIMIT.events.set(fingerprint, [...recentEvents, now]);
+    getRateLimit().events.set(fingerprint, [...recentEvents, now]);
 
     // Store event
     switch (eventData.type) {
@@ -99,12 +104,12 @@ const handleEvent = (eventData: EventData): void => {
     // Cleanup old entries periodically
     if (Math.random() < 0.1) {
       // 10% chance to run cleanup
-      Array.from(RATE_LIMIT.events).forEach(([key, times]) => {
+      Array.from(getRateLimit().events).forEach(([key, times]) => {
         const validTimes = times.filter((time) => time > windowStart);
         if (validTimes.length === 0) {
-          RATE_LIMIT.events.delete(key);
+          getRateLimit().events.delete(key);
         } else {
-          RATE_LIMIT.events.set(key, validTimes);
+          getRateLimit().events.set(key, validTimes);
         }
       });
     }

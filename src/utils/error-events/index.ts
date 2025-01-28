@@ -1,4 +1,4 @@
-import { ErrorEventMetadata } from '../types';
+import { ErrorEventMetadata } from '../../types';
 
 let errorCallback: ((metadata: ErrorEventMetadata) => void) | null = null;
 

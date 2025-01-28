@@ -1,13 +1,3 @@
-interface BaseMetadata {
-  _metadata?: {
-    timestamp: number;
-    environment: string;
-    release: string;
-    fingerprint: string;
-    samplingRate: number;
-  };
-}
-
 export interface ErrorEventMetadata {
   message: string;
   timestamp: number;
@@ -17,14 +7,14 @@ export interface ErrorEventMetadata {
   lineNumber?: number;
   columnNumber?: number;
   error?: Error;
-} & BaseMetadata;
+}
 
 export interface ConsoleErrorMetadata {
   message: any[];
   timestamp: number;
   errors?: Error[];
   stack?: string;
-} & BaseMetadata;
+}
 
 export interface LogMetadata {
   timestamp: number;
@@ -96,4 +86,24 @@ export interface WriteDBParams {
 export interface ReadDBParams {
   dbName: string;
   storeName: string;
+}
+
+export interface LoggifyConfig {
+  maxDBSize: number;
+  storeName: string;
+  dbName: string;
+  maxEvents: number;
+  windowMs: number;
+  samplingRates: {
+    ERROR: number;
+    CONSOLE_ERROR: number;
+    CONSOLE_LOG: number;
+    CONSOLE_WARN: number;
+    FETCH: number;
+  };
+  allowConsoleLogs: boolean;
+  allowConsoleErrors: boolean;
+  allowConsoleWarnings: boolean;
+  allowNetworkRequests: boolean;
+  allowErrors: boolean;
 }

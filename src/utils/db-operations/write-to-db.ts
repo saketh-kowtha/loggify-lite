@@ -1,12 +1,12 @@
-import { openDB } from '../idb';
-import { WriteDBParams } from '../types';
+import { openDB } from '../../idb';
+import configStore from '../../store';
+import { WriteDBParams } from '../../types';
 
-const MAX_DB_SIZE = 1024 * 1024 * 50; // 50MB
 const writeToDB = async ({
   dbName,
   storeName,
   event,
-  threshold = MAX_DB_SIZE, // Default 10MB threshold
+  threshold = configStore.getConfig().maxDBSize, // Default 50MB threshold
 }: WriteDBParams & { threshold?: number }): Promise<void> => {
   try {
     const db = await openDB(dbName);

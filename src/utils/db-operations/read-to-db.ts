@@ -1,5 +1,5 @@
-import { openDB } from '../idb';
-import { ReadDBParams } from '../types';
+import { openDB } from '../../idb';
+import { ReadDBParams } from '../../types';
 
 const readFromDB = async ({
   dbName,

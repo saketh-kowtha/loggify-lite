@@ -1,4 +1,4 @@
-import handleEvent from '../../handle-event';
+import handleEvent from '../../utils/handle-event';
 import { EventType, WarnMetadata } from '../../types';
 
 const originalConsoleWarn = console.warn;

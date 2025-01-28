@@ -1,4 +1,4 @@
-import handleEvent from '../../handle-event';
+import handleEvent from '../../utils/handle-event';
 import { ConsoleErrorMetadata, EventType } from '../../types';
 
 const originalConsoleError = console.error;
