@@ -1,3 +1,13 @@
+interface BaseMetadata {
+  _metadata?: {
+    timestamp: number;
+    environment: string;
+    release: string;
+    fingerprint: string;
+    samplingRate: number;
+  };
+}
+
 export interface ErrorEventMetadata {
   message: string;
   timestamp: number;
@@ -7,14 +17,14 @@ export interface ErrorEventMetadata {
   lineNumber?: number;
   columnNumber?: number;
   error?: Error;
-}
+} & BaseMetadata;
 
 export interface ConsoleErrorMetadata {
   message: any[];
   timestamp: number;
   errors?: Error[];
   stack?: string;
-}
+} & BaseMetadata;
 
 export interface LogMetadata {
   timestamp: number;
