@@ -46,3 +46,33 @@ export interface FetchMetadata {
     duration: number;
   };
 }
+
+export enum EventType {
+  ERROR = 'ERROR',
+  CONSOLE_ERROR = 'CONSOLE_ERROR',
+  CONSOLE_LOG = 'CONSOLE_LOG',
+  CONSOLE_WARN = 'CONSOLE_WARN',
+  FETCH = 'FETCH',
+}
+
+export type EventData =
+  | {
+      type: EventType.ERROR;
+      data: ErrorEventMetadata;
+    }
+  | {
+      type: EventType.CONSOLE_ERROR;
+      data: ConsoleErrorMetadata;
+    }
+  | {
+      type: EventType.CONSOLE_LOG;
+      data: LogMetadata;
+    }
+  | {
+      type: EventType.CONSOLE_WARN;
+      data: WarnMetadata;
+    }
+  | {
+      type: EventType.FETCH;
+      data: FetchMetadata;
+    };
