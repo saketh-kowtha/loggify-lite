@@ -15,6 +15,7 @@ import {
 import { overrideFetch, restoreFetch } from './wrappers/fetch';
 import { overrideXHR, restoreXHR } from './wrappers/xml-http-request';
 import configStore from './store';
+import exportEvents from './utils/export-as-json';
 
 export function initializeLogger(config: LoggifyConfig) {
   if (config.allowErrors) initializeErrorTracking();
@@ -35,3 +36,5 @@ export function uninitializeLogger() {
   if (config.allowNetworkRequests) restoreFetch();
   if (config.allowNetworkRequests) restoreXHR();
 }
+
+export { exportEvents };
