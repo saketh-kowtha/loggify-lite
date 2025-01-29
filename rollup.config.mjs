@@ -8,18 +8,17 @@ const config = [
         output: [
             {
                 file: 'dist/index.js',
-                format: 'cjs',
+                format: 'esm',
+                sourcemap: true,
             },
-            {
-                file: 'dist/index.esm.js',
-                format: 'es',
-            },
+
         ],
         plugins: [
             nodeResolve(),
             commonjs(),
             typescript({
                 tsconfig: './tsconfig.json',
+                outputToFilesystem: true
             }),
         ],
     },

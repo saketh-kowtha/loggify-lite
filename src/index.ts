@@ -16,8 +16,10 @@ import { overrideFetch, restoreFetch } from './wrappers/fetch';
 import { overrideXHR, restoreXHR } from './wrappers/xml-http-request';
 import configStore from './store';
 import exportEvents from './utils/export-as-json';
+import { initializeDB } from './idb';
 
 export function initializeLogger(config: LoggifyConfig) {
+  initializeDB();
   if (config.allowErrors) initializeErrorTracking();
   if (config.allowConsoleErrors) overrideConsoleError();
   if (config.allowConsoleLogs) overrideConsoleLog();
