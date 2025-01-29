@@ -1,4 +1,4 @@
-# Loggify
+# Loggify-Lite
 
 A lightweight JavaScript logging library that captures console logs, errors, warnings and network requests.
 
