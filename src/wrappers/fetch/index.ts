@@ -1,5 +1,6 @@
 import handleEvent from '../../utils/handle-event';
 import { EventType, FetchMetadata } from '../../types';
+import store from '../../store';
 
 const originalFetch = window.fetch;
 
@@ -8,27 +9,27 @@ export const overrideFetch = () => {
     input: RequestInfo | URL,
     init?: RequestInit,
   ): Promise<Response> => {
-    try {
-      const startTime = performance.now();
-      const metadata: FetchMetadata = {
-        request: {
-          url: '',
-          method: 'GET',
-          headers: {},
-          queryParams: {},
-        },
-        response: {
-          status: 0,
-          statusText: '',
-          headers: {},
-        },
-        timing: {
-          startTime,
-          endTime: 0,
-          duration: 0,
-        },
-      };
+    const startTime = performance.now();
 
+    const metadata: FetchMetadata = {
+      request: {
+        url: '',
+        method: 'GET',
+        headers: {},
+        queryParams: {},
+      },
+      response: {
+        status: 0,
+        statusText: '',
+        headers: {},
+      },
+      timing: {
+        startTime,
+        endTime: 0,
+        duration: 0,
+      },
+    };
+    try {
       // Safely set request URL
       try {
         metadata.request.url =
@@ -83,7 +84,6 @@ export const overrideFetch = () => {
       try {
         response = await originalFetch(input, init);
       } catch (e) {
-        // console.error('Original fetch failed:', e);
         throw e; // Re-throw to maintain original error behavior
       }
 
@@ -124,15 +124,12 @@ export const overrideFetch = () => {
         // console.warn('Failed to calculate timing:', e);
       }
 
-      // Send event
-      try {
+      if (store.getConfig().allowNetworkRequests)
         handleEvent({ type: EventType.FETCH, data: metadata });
-      } catch (e) {
-        // console.warn('Failed to handle event:', e);
-      }
 
       return response;
     } catch (error) {
+      handleEvent({ type: EventType.FETCH, data: metadata });
       //   console.error('Fatal error in fetch wrapper:', error);
       // Fallback to original fetch in case of any unexpected errors
       return originalFetch(input, init);

@@ -18,7 +18,7 @@ const events = new Map<string, number[]>();
 const getRateLimit = () => ({
   maxEvents: configStore.getConfig().maxEvents,
   windowMs: configStore.getConfig().windowMs,
-  events, // Reference the external events Map
+  events: events, // Use direct reference to avoid nesting
 });
 
 // Sampling rates for different event types
@@ -31,8 +31,8 @@ const getSamplingRates = () => ({
   [EventType.FETCH]: configStore.getConfig().samplingRates.FETCH,
 });
 
-// Generate fingerprint for deduplication
-const getEventFingerprint = (eventData: EventData): string => {
+// Generate fingerprint for deduplication only for error and console events
+const getEventFingerprint = (eventData: EventData): string | null => {
   const { type, data } = eventData;
   switch (type) {
     case EventType.ERROR:
@@ -41,22 +41,18 @@ const getEventFingerprint = (eventData: EventData): string => {
     case EventType.CONSOLE_LOG:
     case EventType.CONSOLE_WARN:
       return `${type}-${JSON.stringify(data.args)}`;
-    case EventType.FETCH:
-      return `${type}-${data.request.url}-${data.request.method}`;
     default:
-      return `${type}-${JSON.stringify(data)}`;
+      return null; // No fingerprint for other event types
   }
 };
 
 const handleEvent = (eventData: EventData): void => {
   try {
     if (!eventData || typeof eventData !== 'object') {
-      // console.error('Invalid event data received:', eventData);
       return;
     }
 
     if (!eventData.type || !(eventData.type in EventType)) {
-      // console.error('Invalid event type received:', eventData.type);
       return;
     }
 
@@ -66,22 +62,29 @@ const handleEvent = (eventData: EventData): void => {
       return;
     }
 
-    // Rate limiting
-    const now = Date.now();
     const fingerprint = getEventFingerprint(eventData);
-    const eventTimes = getRateLimit().events.get(fingerprint) || [];
+    const now = Date.now();
 
-    // Remove timestamps outside current window
-    const windowStart = now - getRateLimit().windowMs;
-    const recentEvents = eventTimes.filter((time) => time > windowStart);
+    // Only apply rate limiting for events that have a fingerprint
+    if (fingerprint) {
+      // Get existing events array or create new one
+      let eventTimes = events.get(fingerprint);
+      if (!eventTimes) {
+        eventTimes = [];
+      }
 
-    if (recentEvents.length >= getRateLimit().maxEvents) {
-      // console.warn(`Rate limit exceeded for event type: ${eventData.type}`);
-      return;
+      // Remove timestamps outside current window
+      const windowStart = now - getRateLimit().windowMs;
+      eventTimes = eventTimes.filter((time) => time > windowStart);
+
+      if (eventTimes.length >= getRateLimit().maxEvents) {
+        return;
+      }
+
+      // Update rate limiting tracker with new array
+      eventTimes.push(now);
+      events.set(fingerprint, eventTimes);
     }
-
-    // Update rate limiting tracker
-    getRateLimit().events.set(fingerprint, [...recentEvents, now]);
 
     // Store event
     switch (eventData.type) {
@@ -93,10 +96,7 @@ const handleEvent = (eventData: EventData): void => {
         try {
           storeToDB(eventData.type, eventData);
         } catch (storeError) {
-          // console.error('Failed to store event to DB:', {
-          //   eventType: eventData.type,
-          //   error: storeError,
-          // });
+          // Silent error
         }
         break;
     }
@@ -104,17 +104,19 @@ const handleEvent = (eventData: EventData): void => {
     // Cleanup old entries periodically
     if (Math.random() < 0.1) {
       // 10% chance to run cleanup
-      Array.from(getRateLimit().events).forEach(([key, times]) => {
+      for (const key of Array.from(getRateLimit().events.keys())) {
+        const times = getRateLimit().events.get(key) || [];
+        const windowStart = now - getRateLimit().windowMs;
         const validTimes = times.filter((time) => time > windowStart);
         if (validTimes.length === 0) {
           getRateLimit().events.delete(key);
         } else {
           getRateLimit().events.set(key, validTimes);
         }
-      });
+      }
     }
   } catch (error) {
-    // console.error('Error in handleEvent:', error);
+    // Silent error
   }
 };
 

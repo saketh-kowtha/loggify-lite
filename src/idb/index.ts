@@ -11,6 +11,7 @@ export const initializeDB = async (
         if (!db.objectStoreNames.contains('logs')) {
           db.createObjectStore('logs', {
             autoIncrement: false,
+            keyPath: 'id',
           });
         }
       },

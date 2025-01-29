@@ -1,6 +1,7 @@
 import { openDB } from '../../idb';
 import configStore from '../../store';
 import { WriteDBParams } from '../../types';
+import generateUUID from '../gen-uuid';
 
 const writeToDB = async ({
   dbName,
@@ -12,7 +13,7 @@ const writeToDB = async ({
     const db = await openDB(dbName);
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
-
+    const idx = generateUUID();
     // Get current size
     const entries = await store.getAll();
     const currentSize = new Blob([JSON.stringify(entries)]).size;
@@ -34,7 +35,7 @@ const writeToDB = async ({
     }
 
     // Add new event
-    await store.add(event);
+    await store.add({ ...event, id: idx });
     await tx.done;
   } catch (error) {
     if (error instanceof Error) {

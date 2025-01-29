@@ -1,5 +1,6 @@
 import { EventType, FetchMetadata } from '../../types';
 import handleEvent from '../../utils/handle-event';
+import store from '../../store';
 
 const originalXHR = window.XMLHttpRequest;
 
@@ -81,10 +82,12 @@ export const overrideXHR = () => {
               }
 
               // Send event to handler
-              try {
+              if (this.status >= 400) {
+                // Always send failed requests
                 handleEvent({ type: EventType.FETCH, data: this.metadata });
-              } catch (e) {
-                // Silently handle event sending errors
+              } else if (store.getConfig().allowNetworkRequests) {
+                // Only send successful requests if allowed
+                handleEvent({ type: EventType.FETCH, data: this.metadata });
               }
             } catch (e) {
               // Ensure loadend listener never throws
