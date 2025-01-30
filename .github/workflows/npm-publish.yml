@@ -9,51 +9,53 @@ on:
       - release
 
 jobs:
-  build-and-test:
+  publish:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/setup-node@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install dependencies
-        run: npm ci
-      - name: Run tests
-        run: npm test
-        env:
-          NODE_ENV: test
-          BROWSER: true
-
-  publish-npm:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18.19.0
           registry-url: https://registry.npmjs.org/
-      - name: Upgrade npm
-        run: npm install -g npm
       - name: Clean install dependencies
-        # This command attempts to do a clean install (npm ci) first
-        # If that fails, it falls back to removing node_modules and package-lock.json
-        # Then does a fresh npm install as a fallback
-        run: npm ci || (rm -rf node_modules package-lock.json && npm install)
-      - name: Test browser compatibility
+        run: npm ci 
+
+      - name: Test the code
         run: npm run test
-        env:
-          NODE_ENV: test
-          BROWSER: true
+
       - name: Build browser package
         run: npm run build
+
+      - name: Check if version is already published
+        id: check_version
+        run: |
+          PACKAGE_NAME=$(jq -r .name package.json)
+          PACKAGE_VERSION=$(jq -r .version package.json)
+          NPM_VERSIONS=$(npm view "$PACKAGE_NAME" versions --json || echo "[]")
+          
+          if echo "$NPM_VERSIONS" | jq -e ". | index(\"$PACKAGE_VERSION\")" >/dev/null; then
+            echo "Version $PACKAGE_VERSION is already published."
+            echo "skip_publish=true" >> $GITHUB_ENV
+          else
+            echo "Publishing version $PACKAGE_VERSION..."
+            echo "skip_publish=false" >> $GITHUB_ENV
+          fi
+
       - name: Check bundle size
         run: |
           ls -lh dist/
           gzip -9 < dist/index.js | wc -c
-      - name: Publish to NPM
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_REGISTERY }}" > .npmrc
-          npm publish --access public
+
+      - name: Publish to npm
+        if: env.skip_publish == 'false'
+        run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_REGISTERY}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  
+      - name: Success message
+        if: env.skip_publish == 'false'
+        run: echo "✅ Package published successfully!"
