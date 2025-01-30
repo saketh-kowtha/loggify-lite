@@ -33,18 +33,46 @@ export interface FetchMetadata {
     headers: Record<string, string>;
     body?: any;
     queryParams: Record<string, string>;
+    cookies: Record<string, string>;
+    httpVersion: string;
+    headersSize: number;
+    bodySize: number;
   };
   response: {
     status: number;
     statusText: string;
     headers: Record<string, string>;
     body?: any;
+    httpVersion: string;
+    redirectURL: string;
+    headersSize: number;
+    bodySize: number;
+    content: {
+      size: number;
+      mimeType: string;
+      text: string;
+      encoding: string;
+    };
   };
   timing: {
     startTime: number;
     endTime: number;
     duration: number;
+    blocked: number;
+    dns: number;
+    connect: number;
+    send: number;
+    wait: number;
+    receive: number;
+    ssl: number;
   };
+  cache: {
+    beforeRequest: any;
+    afterRequest: any;
+  };
+  serverIPAddress: string;
+  connection: string;
+  pageref: string;
 }
 
 export enum EventType {
@@ -80,7 +108,7 @@ export type EventData =
 export interface WriteDBParams {
   dbName: string;
   storeName: string;
-  event: { type: keyof typeof EventType; data: EventData };
+  event: EventData;
 }
 
 export interface ReadDBParams {

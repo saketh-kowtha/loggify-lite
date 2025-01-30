@@ -17,18 +17,54 @@ export const overrideFetch = () => {
         method: 'GET',
         headers: {},
         queryParams: {},
+        cookies: document.cookie
+          ? Object.fromEntries(
+              document.cookie.split(';').map((cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                return [key, value];
+              }),
+            )
+          : {},
+        httpVersion: 'HTTP/1.1',
+        headersSize: 0,
+        bodySize: 0,
       },
       response: {
         status: 0,
         statusText: '',
         headers: {},
+        httpVersion: 'HTTP/1.1',
+        redirectURL: '',
+        headersSize: 0,
+        bodySize: 0,
+        content: {
+          size: 0,
+          mimeType: '',
+          text: '',
+          encoding: '',
+        },
       },
       timing: {
         startTime,
         endTime: 0,
         duration: 0,
+        blocked: -1,
+        dns: -1,
+        connect: -1,
+        send: 0,
+        wait: 0,
+        receive: 0,
+        ssl: -1,
       },
+      cache: {
+        beforeRequest: null,
+        afterRequest: null,
+      },
+      serverIPAddress: '',
+      connection: '',
+      pageref: window.location.href,
     };
+
     try {
       // Safely set request URL
       try {
@@ -64,6 +100,12 @@ export const overrideFetch = () => {
             headerEntries.push([key, value]);
           });
           metadata.request.headers = Object.fromEntries(headerEntries);
+          metadata.request.headersSize = Object.entries(
+            metadata.request.headers,
+          ).reduce(
+            (size, [key, value]) => size + key.length + value.length + 4,
+            0,
+          );
         }
       } catch (e) {
         // console.warn('Failed to collect request headers:', e);
@@ -74,20 +116,24 @@ export const overrideFetch = () => {
         if (init?.body) {
           metadata.request.body =
             typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
+          metadata.request.bodySize = init.body.toString().length;
         }
       } catch (e) {
         // console.warn('Failed to parse request body:', e);
         metadata.request.body = init?.body;
+        if (init?.body) {
+          metadata.request.bodySize = init.body.toString().length;
+        }
       }
 
       let response: Response;
+      const fetchStartTime = performance.now();
       try {
         response = await originalFetch(input, init);
       } catch (e) {
         throw e; // Re-throw to maintain original error behavior
       }
-
-      const endTime = performance.now();
+      const fetchEndTime = performance.now();
 
       // Collect response metadata
       try {
@@ -99,6 +145,12 @@ export const overrideFetch = () => {
           responseHeaderEntries.push([key, value]);
         });
         metadata.response.headers = Object.fromEntries(responseHeaderEntries);
+        metadata.response.headersSize = Object.entries(
+          metadata.response.headers,
+        ).reduce(
+          (size, [key, value]) => size + key.length + value.length + 4,
+          0,
+        );
       } catch (e) {
         // console.warn('Failed to collect response metadata:', e);
       }
@@ -106,20 +158,24 @@ export const overrideFetch = () => {
       // Try to parse response body
       try {
         const clonedResponse = response.clone();
-        metadata.response.body = await clonedResponse.json();
+        const responseBody = await clonedResponse.text();
+        metadata.response.content.text = responseBody;
+        metadata.response.content.size = responseBody.length;
+        metadata.response.bodySize = responseBody.length;
+        metadata.response.content.mimeType =
+          response.headers.get('content-type') || '';
       } catch (e) {
-        try {
-          const clonedResponse = response.clone();
-          metadata.response.body = await clonedResponse.text();
-        } catch (textError) {
-          //   console.warn('Failed to parse response body:', textError);
-        }
+        // console.warn('Failed to parse response body:', e);
       }
 
       // Calculate timing
       try {
+        const endTime = performance.now();
         metadata.timing.endTime = endTime;
         metadata.timing.duration = endTime - startTime;
+        metadata.timing.wait = fetchEndTime - fetchStartTime;
+        metadata.timing.send = fetchStartTime - startTime;
+        metadata.timing.receive = endTime - fetchEndTime;
       } catch (e) {
         // console.warn('Failed to calculate timing:', e);
       }

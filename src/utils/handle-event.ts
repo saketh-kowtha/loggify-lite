@@ -7,7 +7,7 @@ function storeToDB(eventType: keyof typeof EventType, eventData: EventData) {
   writeToDB({
     dbName: configStore.getConfig().dbName,
     storeName: configStore.getConfig().storeName,
-    event: { type: eventType, data: eventData },
+    event: eventData,
   });
 }
 
@@ -58,7 +58,11 @@ const handleEvent = (eventData: EventData): void => {
 
     // Apply sampling
     const samplingRate = getSamplingRates()[eventData.type] || 1;
-    if (Math.random() > samplingRate) {
+    if (
+      Math.random() > samplingRate &&
+      eventData.type !== EventType.ERROR &&
+      eventData.type !== EventType.FETCH
+    ) {
       return;
     }
 

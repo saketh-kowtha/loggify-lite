@@ -9,27 +9,64 @@ export const overrideXHR = () => {
     window.XMLHttpRequest = class extends originalXHR {
       private metadata!: FetchMetadata;
       private startTime: number = 0;
+      private startedDateTime: string = '';
 
       constructor() {
         super();
         try {
+          this.startedDateTime = new Date().toISOString();
           this.metadata = {
             request: {
               url: '',
               method: '',
               headers: {},
               queryParams: {},
+              cookies: document.cookie
+                ? Object.fromEntries(
+                    document.cookie.split(';').map((cookie) => {
+                      const [key, value] = cookie.trim().split('=');
+                      return [key, value];
+                    }),
+                  )
+                : {},
+              httpVersion: 'HTTP/1.1',
+              headersSize: 0,
+              bodySize: 0,
             },
             response: {
               status: 0,
               statusText: '',
               headers: {},
+              httpVersion: 'HTTP/1.1',
+              redirectURL: '',
+              headersSize: 0,
+              bodySize: 0,
+              content: {
+                size: 0,
+                mimeType: '',
+                text: '',
+                encoding: '',
+              },
             },
             timing: {
               startTime: 0,
               endTime: 0,
               duration: 0,
+              blocked: -1,
+              dns: -1,
+              connect: -1,
+              send: 0,
+              wait: 0,
+              receive: 0,
+              ssl: -1,
             },
+            cache: {
+              beforeRequest: null,
+              afterRequest: null,
+            },
+            serverIPAddress: '',
+            connection: '',
+            pageref: window.location.href,
           };
 
           this.addEventListener('loadend', () => {
@@ -55,6 +92,9 @@ export const overrideXHR = () => {
                         const [key, value] = curr.split(': ');
                         if (key && value) {
                           acc[key.toLowerCase()] = value;
+                          if (key.toLowerCase() === 'content-type') {
+                            this.metadata.response.content.mimeType = value;
+                          }
                         }
                         return acc;
                       } catch (e) {
@@ -68,18 +108,35 @@ export const overrideXHR = () => {
                 // Silently handle header parsing errors
               }
 
+              // Calculate headers size
+              this.metadata.response.headersSize = Object.entries(
+                this.metadata.response.headers,
+              ).reduce(
+                (size, [key, value]) => size + key.length + value.length + 4,
+                0,
+              );
+
               // Try to parse response body
               try {
                 if (this.responseText) {
-                  this.metadata.response.body = JSON.parse(this.responseText);
+                  this.metadata.response.content.text = this.responseText;
+                  this.metadata.response.content.size =
+                    this.responseText.length;
+                  this.metadata.response.bodySize = this.responseText.length;
+                  try {
+                    this.metadata.response.body = JSON.parse(this.responseText);
+                  } catch (e) {
+                    this.metadata.response.body = this.responseText;
+                  }
                 }
               } catch (e) {
-                try {
-                  this.metadata.response.body = this.responseText;
-                } catch (textError) {
-                  // If even getting responseText fails, we'll skip body
-                }
+                // If getting responseText fails, we'll skip body
               }
+
+              // Calculate timing metrics
+              const timingEnd = performance.now();
+              this.metadata.timing.wait = timingEnd - this.startTime;
+              this.metadata.timing.receive = endTime - timingEnd;
 
               // Send event to handler
               if (this.status >= 400) {
@@ -131,6 +188,8 @@ export const overrideXHR = () => {
         try {
           if (header && value) {
             this.metadata.request.headers[header.toLowerCase()] = value;
+            this.metadata.request.headersSize +=
+              header.length + value.length + 4; // 4 for ': ' and '\r\n'
           }
         } catch (e) {
           // Ensure metadata collection never breaks original functionality
@@ -150,8 +209,13 @@ export const overrideXHR = () => {
             try {
               this.metadata.request.body =
                 typeof body === 'string' ? JSON.parse(body) : body;
+              this.metadata.request.bodySize =
+                typeof body === 'string'
+                  ? body.length
+                  : JSON.stringify(body).length;
             } catch (e) {
               this.metadata.request.body = body;
+              this.metadata.request.bodySize = String(body).length;
             }
           }
         } catch (e) {
