@@ -22,7 +22,7 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
       - name: Clean install dependencies
-        run: npm ci 
+        run: npm install
 
       - name: Test the code
         run: npm run test
