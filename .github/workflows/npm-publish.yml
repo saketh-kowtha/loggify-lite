@@ -31,10 +31,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18.19.0
           registry-url: https://registry.npmjs.org/
-      - name: Install dependencies
-        run: npm ci
+      - name: Upgrade npm
+        run: npm install -g npm
+      - name: Clean install dependencies
+        # This command attempts to do a clean install (npm ci) first
+        # If that fails, it falls back to removing node_modules and package-lock.json
+        # Then does a fresh npm install as a fallback
+        run: npm ci || (rm -rf node_modules package-lock.json && npm install)
       - name: Test browser compatibility
         run: npm run test
         env:
