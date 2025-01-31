@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loggify-lite - Lightweight Browser Logging Library</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+
+        pre {
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2 {
+            color: #2c3e50;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.4em;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            background-color: #007bff;
+            color: white;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Loggify-lite</h1>
+        <p>A lightweight, efficient browser logging library for tracking errors, console outputs, and network requests.
+        </p>
+
+        <div>
+            <span class="badge">Browser</span>
+            <span class="badge">TypeScript</span>
+            <span class="badge">Logging</span>
+        </div>
+
+        <h2>Installation</h2>
+        <pre><code>npm install loggify-lite</code></pre>
+
+        <h2>Features</h2>
+        <ul>
+            <li>Error tracking</li>
+            <li>Console logging (log, warn, error)</li>
+            <li>Network request monitoring (Fetch & XHR)</li>
+            <li>Configurable sampling rates</li>
+            <li>IndexedDB storage</li>
+            <li>Export capabilities</li>
+        </ul>
+
+        <h2>Quick Start</h2>
+        <pre><code>import { initializeLogger } from 'loggify-lite';
+
+initializeLogger({
+    maxDBSize: 5 * 1024 * 1024, // 5MB
+    storeName: 'logs',
+    dbName: 'loggify-db',
+    maxEvents: 1000,
+    windowMs: 60000,
+    samplingRates: {
+        ERROR: 1,
+        CONSOLE_ERROR: 1,
+        CONSOLE_LOG: 0.1,
+        CONSOLE_WARN: 0.5,
+        FETCH: 0.2
+    },
+    allowConsoleLogs: true,
+    allowConsoleErrors: true,
+    allowConsoleWarnings: true,
+    allowNetworkRequests: true,
+    allowErrors: true
+});</code></pre>
+
+        <h2>Documentation</h2>
+        <ul>
+            <li><a href="ts-docs/index.html">TypeScript Documentation</a></li>
+            <li><a href="https://github.com/saketh-kowtha/loggify-lite">GitHub Repository</a></li>
+        </ul>
+    </div>
+</body>
+
+</html>
