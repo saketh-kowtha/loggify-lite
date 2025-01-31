@@ -73,7 +73,7 @@ jobs:
 
       - name: Push changes
         run: |
-          git push origin main
+          git push origin release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
