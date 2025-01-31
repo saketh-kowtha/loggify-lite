@@ -43,6 +43,8 @@ jobs:
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.event.pusher.email || 'hudson@no-email.com' }}"  # Fallback email if pusher.email is not available
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git add .
+          git commit -m "chore: commit before version bump"
 
       - name: Check for commit message keywords (feature or breaking-change)
         id: version-bump
