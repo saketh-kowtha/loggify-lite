@@ -12,6 +12,10 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
       - name: Clean install dependencies
         run: npm install
@@ -27,8 +31,24 @@ jobs:
       - name: Test the code
         run: npm run test
 
+      - name: Run Security Audit
+        run: npm audit --audit-level=high
+
       - name: Build browser package
         run: npm run build
+
+      - name: Run Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
+
+      - name: Cache npm modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
 
       - name: Check if version is already published
         id: check_version
