@@ -40,5 +40,3 @@ export function uninitializeLogger() {
 }
 
 export { exportEvents };
-
-export * from './types';
