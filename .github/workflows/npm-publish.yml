@@ -41,7 +41,8 @@ jobs:
       - name: Set up Git user for commit
         run: |
           git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.event.pusher.email || 'youremail@domain.com' }}"  # Fallback email if pusher.email is not available
+          git config --global user.email "${{ github.event.pusher.email || 'hudson@no-email.com' }}"  # Fallback email if pusher.email is not available
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
       - name: Check for commit message keywords (feature or breaking-change)
         id: version-bump
