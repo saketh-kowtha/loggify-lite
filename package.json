@@ -6,6 +6,11 @@
   "types": "dist/types.ts",
   "author": "kowtha-saketh",
   "license": "MIT",
+  "release": {
+    "branches": [
+      "release"
+    ]
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
