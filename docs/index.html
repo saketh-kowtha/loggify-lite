@@ -4,15 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loggify-lite - Lightweight Browser Logging Library</title>
+    <meta name="description"
+        content="Loggify-lite - A professional browser logging library for error tracking, console monitoring, and network request analysis">
+    <meta name="keywords" content="logging, browser logging, error tracking, console monitoring, TypeScript">
+    <title>Loggify-lite - Professional Browser Logging Solution</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
-            color: #333;
+            color: #2c3e50;
+            background: #f8f9fa;
         }
 
         pre {
@@ -20,37 +24,96 @@
             padding: 16px;
             border-radius: 6px;
             overflow-x: auto;
+            border: 1px solid #e1e4e8;
         }
 
         code {
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 0.9em;
         }
 
         .container {
             background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
         }
 
         h1,
         h2 {
-            color: #2c3e50;
+            color: #1a365d;
+            margin-top: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
         }
 
         .badge {
             display: inline-block;
-            padding: 0.25em 0.4em;
-            font-size: 0.75em;
-            font-weight: 700;
+            padding: 0.35em 0.65em;
+            font-size: 0.85em;
+            font-weight: 600;
             line-height: 1;
             text-align: center;
             white-space: nowrap;
             vertical-align: baseline;
-            border-radius: 0.25rem;
-            background-color: #007bff;
+            border-radius: 0.375rem;
+            background-color: #3182ce;
             color: white;
-            margin: 0 4px;
+            margin: 0 6px;
+            transition: all 0.2s ease;
+        }
+
+        .badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            margin: 0.8rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        ul li:before {
+            content: "✓";
+            color: #38a169;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        a {
+            color: #3182ce;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: #2c5282;
+            text-decoration: underline;
+        }
+
+        .description {
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin: 1.5rem 0;
+            line-height: 1.8;
         }
     </style>
 </head>
@@ -58,55 +121,67 @@
 <body>
     <div class="container">
         <h1>🔍 Loggify-lite</h1>
-        <p>A lightweight, efficient browser logging library for tracking errors, console outputs, and network requests.
-        </p>
+        <p class="description">A professional-grade, lightweight browser logging library engineered for modern web
+            applications.
+            Efficiently captures errors, console outputs, and network requests with minimal performance impact.</p>
 
         <div>
-            <span class="badge">Browser</span>
+            <span class="badge">Browser-First</span>
             <span class="badge">TypeScript</span>
-            <span class="badge">Logging</span>
+            <span class="badge">Performance Optimized</span>
+            <span class="badge">Production Ready</span>
         </div>
 
         <h2>Installation</h2>
         <pre><code>npm install loggify-lite</code></pre>
 
-        <h2>Features</h2>
+        <h2>Enterprise Features</h2>
         <ul>
-            <li>Error tracking</li>
-            <li>Console logging (log, warn, error)</li>
-            <li>Network request monitoring (Fetch & XHR)</li>
-            <li>Configurable sampling rates</li>
-            <li>IndexedDB storage</li>
-            <li>Export capabilities</li>
+            <li>Comprehensive error tracking with detailed stack traces</li>
+            <li>Advanced console monitoring (log, warn, error) with filtering capabilities</li>
+            <li>Sophisticated network request analysis (Fetch & XHR) with timing metrics</li>
+            <li>Fine-grained sampling rate configuration for optimal performance</li>
+            <li>Persistent IndexedDB storage with automatic log rotation</li>
+            <li>Flexible data export capabilities for analysis</li>
+            <li>Zero production dependencies</li>
+            <li>Minimal bundle size impact (~5KB gzipped)</li>
         </ul>
 
-        <h2>Quick Start</h2>
+        <h2>Professional Implementation</h2>
         <pre><code>import { initializeLogger } from 'loggify-lite';
 
+// Initialize with enterprise-grade configuration
 initializeLogger({
-    maxDBSize: 5 * 1024 * 1024, // 5MB
-    storeName: 'logs',
-    dbName: 'loggify-db',
-    maxEvents: 1000,
-    windowMs: 60000,
+    // Storage Configuration
+    maxDBSize: 5 * 1024 * 1024,  // 5MB storage limit
+    storeName: 'application-logs',
+    dbName: 'loggify-production-db',
+    
+    // Event Management
+    maxEvents: 1000,             // Maximum events per window
+    windowMs: 60000,             // 1-minute window
+    
+    // Intelligent Sampling Rates
     samplingRates: {
-        ERROR: 1,
-        CONSOLE_ERROR: 1,
-        CONSOLE_LOG: 0.1,
-        CONSOLE_WARN: 0.5,
-        FETCH: 0.2
+        ERROR: 1.0,              // Capture all errors
+        CONSOLE_ERROR: 1.0,      // Capture all console errors
+        CONSOLE_LOG: 0.1,        // Sample 10% of logs
+        CONSOLE_WARN: 0.5,       // Sample 50% of warnings
+        FETCH: 0.2               // Sample 20% of network requests
     },
-    allowConsoleLogs: true,
-    allowConsoleErrors: true,
-    allowConsoleWarnings: true,
-    allowNetworkRequests: true,
-    allowErrors: true
+    
+    // Feature Controls
+    allowConsoleLogs: true,      // Enable console logging
+    allowConsoleErrors: true,    // Enable error tracking
+    allowConsoleWarnings: true,  // Enable warning capture
+    allowNetworkRequests: true,  // Enable request monitoring
+    allowErrors: true            // Enable global error handling
 });</code></pre>
 
-        <h2>Documentation</h2>
+        <h2>Documentation & Resources</h2>
         <ul>
-            <li><a href="ts-docs/index.html">TypeScript Documentation</a></li>
-            <li><a href="https://github.com/saketh-kowtha/loggify-lite">GitHub Repository</a></li>
+            <li><a href="ts-docs/index.html">Comprehensive TypeScript Documentation</a></li>
+            <li><a href="https://github.com/saketh-kowtha/loggify-lite">Official GitHub Repository</a></li>
         </ul>
     </div>
 </body>
