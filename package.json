@@ -10,6 +10,16 @@
   "types": "dist/index.d.ts",
   "author": "saketh-kowtha",
   "license": "MIT",
+  "keywords": [
+    "loggify-lite",
+    "loggify",
+    "logging",
+    "logger",
+    "browser",
+    "indexeddb",
+    "lite",
+    "typescript"
+  ],
   "release": {
     "branches": [
       "release"

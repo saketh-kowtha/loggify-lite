@@ -98,6 +98,8 @@ jobs:
           else
             echo "Publishing version $PACKAGE_VERSION..."
             echo "skip_publish=false" >> $GITHUB_ENV
+            git tag $PACKAGE_VERSION -m "Release version $PACKAGE_VERSION"
+            git push origin $PACKAGE_VERSION
           fi
 
       - name: Generate Docs
