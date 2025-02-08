@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 
-const generateUUID = () => uuidv4();
+const generateUUID = () => nanoid();
 
 export default generateUUID;
