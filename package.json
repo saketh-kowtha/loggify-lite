@@ -40,7 +40,7 @@
     "typescript": "^5.7.3"
   },
   "scripts": {
-    "build": "rollup -c",
+    "build": "rm -rf dist && rollup -c",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write .",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",

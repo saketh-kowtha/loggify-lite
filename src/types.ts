@@ -73,6 +73,7 @@ export interface FetchMetadata {
   serverIPAddress: string;
   connection: string;
   pageref: string;
+  error?: Error;
 }
 
 export enum EventType {
