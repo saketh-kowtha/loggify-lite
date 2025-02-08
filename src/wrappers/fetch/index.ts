@@ -10,6 +10,7 @@ export const overrideFetch = () => {
     init?: RequestInit,
   ): Promise<Response> => {
     const startTime = performance.now();
+    let response: Response;
 
     const metadata: FetchMetadata = {
       request: {
@@ -17,14 +18,7 @@ export const overrideFetch = () => {
         method: 'GET',
         headers: {},
         queryParams: {},
-        cookies: document.cookie
-          ? Object.fromEntries(
-              document.cookie.split(';').map((cookie) => {
-                const [key, value] = cookie.trim().split('=');
-                return [key, value];
-              }),
-            )
-          : {},
+        cookies: {},
         httpVersion: 'HTTP/1.1',
         headersSize: 0,
         bodySize: 0,
@@ -65,40 +59,38 @@ export const overrideFetch = () => {
       pageref: window.location.href,
     };
 
+    // Silently collect request data without affecting original fetch
     try {
-      // Safely set request URL
-      try {
-        metadata.request.url =
-          typeof input === 'string' ? input : input.toString();
-      } catch (e) {
-        // console.warn('Failed to parse request URL:', e);
-      }
+      metadata.request.url =
+        typeof input === 'string' ? input : input.toString();
+      metadata.request.method = init?.method || 'GET';
 
-      // Safely set request method
+      // Parse cookies
       try {
-        metadata.request.method = init?.method || 'GET';
-      } catch (e) {
-        // console.warn('Failed to parse request method:', e);
-      }
+        metadata.request.cookies = document.cookie
+          ? Object.fromEntries(
+              document.cookie.split(';').map((cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                return [key, value];
+              }),
+            )
+          : {};
+      } catch {}
 
-      // Parse query parameters from URL
+      // Parse query params
       try {
         const url = new URL(metadata.request.url);
         url.searchParams.forEach((value, key) => {
           metadata.request.queryParams[key] = value;
         });
-      } catch (e) {
-        // console.warn('Failed to parse URL parameters:', e);
-      }
+      } catch {}
 
-      // Collect request headers
-      try {
-        if (init?.headers) {
-          const headerEntries: [string, string][] = [];
+      // Parse headers
+      if (init?.headers) {
+        try {
           const headers = new Headers(init.headers);
-          headers.forEach((value, key) => {
-            headerEntries.push([key, value]);
-          });
+          const headerEntries: [string, string][] = [];
+          headers.forEach((value, key) => headerEntries.push([key, value]));
           metadata.request.headers = Object.fromEntries(headerEntries);
           metadata.request.headersSize = Object.entries(
             metadata.request.headers,
@@ -106,57 +98,45 @@ export const overrideFetch = () => {
             (size, [key, value]) => size + key.length + value.length + 4,
             0,
           );
-        }
-      } catch (e) {
-        // console.warn('Failed to collect request headers:', e);
+        } catch {}
       }
 
-      // Collect request body
-      try {
-        if (init?.body) {
+      // Parse body
+      if (init?.body) {
+        try {
           metadata.request.body =
             typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
-          metadata.request.bodySize = init.body.toString().length;
+        } catch {
+          metadata.request.body = init.body;
         }
-      } catch (e) {
-        // console.warn('Failed to parse request body:', e);
-        metadata.request.body = init?.body;
-        if (init?.body) {
-          metadata.request.bodySize = init.body.toString().length;
-        }
+        metadata.request.bodySize = init.body.toString().length;
       }
+    } catch {}
 
-      let response: Response;
+    try {
       const fetchStartTime = performance.now();
-      try {
-        response = await originalFetch(input, init);
-      } catch (e) {
-        throw e; // Re-throw to maintain original error behavior
-      }
+      response = await originalFetch(input, init);
       const fetchEndTime = performance.now();
 
-      // Collect response metadata
+      // Silently collect response data
       try {
         metadata.response.status = response.status;
         metadata.response.statusText = response.statusText;
 
-        const responseHeaderEntries: [string, string][] = [];
-        response.headers.forEach((value, key) => {
-          responseHeaderEntries.push([key, value]);
-        });
-        metadata.response.headers = Object.fromEntries(responseHeaderEntries);
+        // Headers
+        const headerEntries: [string, string][] = [];
+        response.headers.forEach((value, key) =>
+          headerEntries.push([key, value]),
+        );
+        metadata.response.headers = Object.fromEntries(headerEntries);
         metadata.response.headersSize = Object.entries(
           metadata.response.headers,
         ).reduce(
           (size, [key, value]) => size + key.length + value.length + 4,
           0,
         );
-      } catch (e) {
-        // console.warn('Failed to collect response metadata:', e);
-      }
 
-      // Try to parse response body
-      try {
+        // Body
         const clonedResponse = response.clone();
         const responseBody = await clonedResponse.text();
         metadata.response.content.text = responseBody;
@@ -164,31 +144,27 @@ export const overrideFetch = () => {
         metadata.response.bodySize = responseBody.length;
         metadata.response.content.mimeType =
           response.headers.get('content-type') || '';
-      } catch (e) {
-        // console.warn('Failed to parse response body:', e);
-      }
 
-      // Calculate timing
-      try {
+        // Timing
         const endTime = performance.now();
         metadata.timing.endTime = endTime;
         metadata.timing.duration = endTime - startTime;
         metadata.timing.wait = fetchEndTime - fetchStartTime;
         metadata.timing.send = fetchStartTime - startTime;
         metadata.timing.receive = endTime - fetchEndTime;
-      } catch (e) {
-        // console.warn('Failed to calculate timing:', e);
-      }
+      } catch {}
 
-      if (store.getConfig().allowNetworkRequests)
+      if (store.getConfig().allowNetworkRequests) {
         handleEvent({ type: EventType.FETCH, data: metadata });
+      }
 
       return response;
     } catch (error) {
-      handleEvent({ type: EventType.FETCH, data: metadata });
-      //   console.error('Fatal error in fetch wrapper:', error);
-      // Fallback to original fetch in case of any unexpected errors
-      return originalFetch(input, init);
+      metadata.error = error as Error;
+      if (store.getConfig().allowNetworkRequests) {
+        handleEvent({ type: EventType.FETCH, data: metadata });
+      }
+      throw error;
     }
   };
 };
@@ -196,7 +172,5 @@ export const overrideFetch = () => {
 export const restoreFetch = () => {
   try {
     window.fetch = originalFetch;
-  } catch (e) {
-    // console.error('Failed to restore original fetch:', e);
-  }
+  } catch {}
 };
