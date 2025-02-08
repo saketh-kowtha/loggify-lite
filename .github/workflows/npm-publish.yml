@@ -103,8 +103,8 @@ jobs:
       - name: Generate Docs
         run: npm run docs
 
-      - name: Deploy to GitHub Pages
-        run: npm run docs:deploy
+      # - name: Deploy to GitHub Pages
+      #   run: npm run docs:deploy
 
       - name: Check bundle size
         run: |
