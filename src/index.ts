@@ -2,7 +2,18 @@ import {
   cleanupErrorTracking,
   initializeErrorTracking,
 } from './utils/error-events';
-import { LoggifyConfig } from './types';
+import {
+  LoggifyConfig,
+  EventData,
+  EventType,
+  WriteDBParams,
+  ReadDBParams,
+  ConsoleErrorMetadata,
+  FetchMetadata,
+  ErrorEventMetadata,
+  LogMetadata,
+  WarnMetadata,
+} from './types';
 import {
   overrideConsoleError,
   restoreConsoleError,
@@ -39,6 +50,16 @@ export function uninitializeLogger() {
   if (config.allowNetworkRequests) restoreXHR();
 }
 
-export { exportEvents };
-
-export * from './types';
+export {
+  exportEvents,
+  LoggifyConfig,
+  EventData,
+  EventType,
+  WriteDBParams,
+  ReadDBParams,
+  ConsoleErrorMetadata,
+  FetchMetadata,
+  ErrorEventMetadata,
+  LogMetadata,
+  WarnMetadata,
+};
